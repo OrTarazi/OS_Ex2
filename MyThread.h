@@ -29,6 +29,8 @@ class MyThread{
         char* stack;
         sigjmp_buf env;
         thread_entry_point get_entry_point();
+        ~MyThread();
+
 
     private:
         thread_entry_point entry_point;

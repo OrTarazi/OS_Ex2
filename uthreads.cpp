@@ -71,8 +71,8 @@ void adjust_ready_queue(int tid) {
 
 int reset_timer(int usec_interval) {
     itimerval timer;
-    timer.it_value.tv_sec = usec_interval / 1'000'000;
-    timer.it_value.tv_usec = usec_interval % 1'000'000;
+    timer.it_value.tv_sec = usec_interval / 1000000;
+    timer.it_value.tv_usec = usec_interval % 1000000;
 
     // For repeating timer: interval time = initial time
     timer.it_interval = timer.it_value;
@@ -267,7 +267,7 @@ int uthread_terminate(int tid){
     if (tid == 0) {
         for (int i = MAX_THREAD_NUM; i >= 0; i--){
             if (threads.find(i) != threads.end()){
-                delete threads[i]->stack;
+//                delete[] threads[i]->stack;
                 delete threads[i];
                 threads.erase(i);
             }
@@ -291,7 +291,7 @@ int uthread_terminate(int tid){
             break;
     }
 
-    delete threads[tid]->stack;
+//    delete[] threads[tid]->stack;
     delete threads[tid];
     threads.erase(tid);
 

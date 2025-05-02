@@ -58,5 +58,13 @@ thread_entry_point MyThread::get_entry_point() {
     return this->entry_point;
 }
 
+MyThread::~MyThread() {
+    if (stack != nullptr && tid != 0) {
+        delete[] stack;
+        stack = nullptr;
+    }
+}
+
+
 
 
