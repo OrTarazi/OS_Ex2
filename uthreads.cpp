@@ -264,12 +264,18 @@ int uthread_terminate(int tid){
         return -1;
     }
 
-    if (tid == 0) {
-        for (int i = MAX_THREAD_NUM; i >= 0; i--){
-            if (threads.find(i) != threads.end()){
-//                delete[] threads[i]->stack;
-                delete threads[i];
-                threads.erase(i);
+    if (tid == MAIN_THREAD_TID) {
+        if (running->get_tid()!=MAIN_THREAD_TID) {
+            std::cerr << "thread library error: main thread cannot be terminated\n";
+            unblock_signals();
+            return -1;
+        }
+        else {
+            for (int i = MAX_THREAD_NUM; i >= 0; i--){
+                if (threads.find(i) != threads.end()){
+                    delete threads[i];
+                    threads.erase(i);
+                }
             }
         }
         unblock_signals();
@@ -294,13 +300,9 @@ int uthread_terminate(int tid){
 //    delete[] threads[tid]->stack;
     delete threads[tid];
     threads.erase(tid);
-
     unblock_signals();
     return 0;
 }
-
-
-
 
 
 /**
