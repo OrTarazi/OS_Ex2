@@ -24,22 +24,25 @@ int quantum_length_usecs = 0;
 struct sigaction sa = {0};
 struct itimerval timer;
 
-
-
 sigset_t set;
 
+/**
+ * Blocks the SIGVTALRM signal for the calling thread to prevent signal
+ * delivery during critical sections of code execution.
+ */
 void block_signals() {
     sigemptyset(&set);
     sigaddset(&set, SIGVTALRM);
     sigprocmask(SIG_BLOCK, &set, nullptr);
 }
 
+/**
+ * Unblocks the SIGVTALRM signal for the calling thread, allowing the signal to be
+ * delivered and processed.
+ */
 void unblock_signals() {
     sigprocmask(SIG_UNBLOCK, &set, nullptr);
 }
-
-
-
 
 /**
  * checks if a thread with given id exists in the system
@@ -53,6 +56,14 @@ int check_tid_exists(int tid){
     }
     return 0;
 }
+
+/**
+ * Adjusts the ready queue by removing the thread with the specified thread ID
+ * from the queue. This operation does not affect threads in other states such
+ * as BLOCKED or RUNNING.
+ *
+ * @param tid The thread ID of the thread to be removed from the ready queue.
+ */
 void adjust_ready_queue(int tid) {
     std::queue<MyThread*> new_ready_queue;
 
@@ -69,6 +80,15 @@ void adjust_ready_queue(int tid) {
     ready_queue = std::move(new_ready_queue);
 }
 
+/**
+ * Resets the virtual timer for the calling thread to a specified interval.
+ * The virtual timer counts down only when the thread is executing and is
+ * commonly used for timing thread execution in user-level threading libraries.
+ *
+ * @param usec_interval The timer interval in microseconds. This value determines
+ *                      both the initial and periodic intervals of the timer.
+ * @return 0 if the timer is successfully set, or -1 if an error occurs.
+ */
 int reset_timer(int usec_interval) {
     itimerval timer;
     timer.it_value.tv_sec = usec_interval / 1000000;
@@ -137,7 +157,13 @@ address_t translate_address(address_t addr)
     return ret;
 }
 
-
+/**
+ * Handles the SIGVTALRM signal, implementing a timer-based thread scheduling mechanism.
+ * This function decrements the quantum counters for all active threads and resumes
+ * threads whose quantum counters reach zero.
+ *
+ * @param sig The signal number (expected to be SIGVTALRM) triggering the handler.
+ */
 void timer_handler(int sig) {
     //sleep mechanism. lowers down quantums left and resumes if reaches 0.
     for(int i = 1; i < MAX_THREAD_NUM; i++){
@@ -154,6 +180,15 @@ void timer_handler(int sig) {
     yield(true);
 }
 
+/**
+ * Initializes the thread's execution environment to prepare it for execution.
+ * This function configures the thread's stack pointer, program counter, and
+ * clears the saved signal mask in the jump buffer.
+ *
+ * @param thread A pointer to the `MyThread` object that represents the thread
+ * being set up. The thread's execution state is configured based on its
+ * stack and entry point.
+ */
 void setup_thread(MyThread* thread)
 {
     // initializes env[tid] to use the right stack, and to run from the function 'entry_point', when we'll use
@@ -297,7 +332,6 @@ int uthread_terminate(int tid){
             break;
     }
 
-//    delete[] threads[tid]->stack;
     delete threads[tid];
     threads.erase(tid);
     unblock_signals();
